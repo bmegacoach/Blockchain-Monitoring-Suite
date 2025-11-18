@@ -483,8 +483,8 @@ const DashboardContent = () => {
         <Card>
           <CardContent className="py-12 text-center">
             <Activity className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to SmartMonitor</h2>
-            <p className="text-gray-600 mb-6">Enter a contract address above to start monitoring</p>
+            <h2 className="text-2xl font-bold text-white mb-2">Welcome to SmartMonitor</h2>
+<p className="text-white mb-6">Enter a contract address above to start monitoring</p>
             <Button onClick={() => {
               setAddress(demoAddress);
               fetchContractData(demoAddress);
@@ -499,3 +499,4 @@ const DashboardContent = () => {
 };
 
 export default DashboardContent;
+
