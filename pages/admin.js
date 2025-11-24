@@ -180,13 +180,13 @@ export default function GuardianAdmin() {
               )}
 
               {/* Configuration Check */}
-              {isClient && !process.env.NEXT_PUBLIC_GUARDIAN_ADDRESS && (
-                <div className="bg-red-500/10 border-l-4 border-red-500 rounded-lg p-4 mb-8 flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+              {isClient && owner === null && hasMetaMask && (
+                <div className="bg-yellow-500/10 border-l-4 border-yellow-500 rounded-lg p-4 mb-8 flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-red-400 font-semibold mb-1">Configuration Missing</p>
-                    <p className="text-red-400/80 text-sm">
-                      Guardian contract address is not configured. Please set <code>NEXT_PUBLIC_GUARDIAN_ADDRESS</code> in your <code>.env.local</code> file.
+                    <p className="text-yellow-400 font-semibold mb-1">Loading Guardian Configuration</p>
+                    <p className="text-yellow-400/80 text-sm">
+                      Fetching Guardian contract configuration...
                     </p>
                   </div>
                 </div>
