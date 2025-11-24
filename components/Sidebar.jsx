@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   TrendingUp,
   Shield,
+  Lock,
   ChevronRight
 } from 'lucide-react';
 
@@ -17,7 +18,9 @@ const Sidebar = ({ isOpen, onClose }) => {
     { label: 'Analytics', icon: TrendingUp, href: '/analytics', badge: null },
   ];
 
-  const bottomItems = [];
+  const bottomItems = [
+    { label: 'Guardian Admin', icon: Lock, href: '/admin', badge: 'ADMIN' },
+  ];
 
   const isActive = (href) => router.pathname === href;
 
@@ -79,13 +82,19 @@ const Sidebar = ({ isOpen, onClose }) => {
                     href={item.href}
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                       active
-                        ? 'bg-blue-600/20 text-blue-400'
+                        ? 'bg-red-600/20 text-red-400 border-l-4 border-red-400'
                         : 'text-gray-300 hover:bg-gray-700'
                     }`}
                     onClick={onClose}
                   >
                     <Icon className="w-5 h-5" />
                     <span className="flex-1 font-medium text-sm">{item.label}</span>
+                    {item.badge && (
+                      <span className="px-2 py-0.5 bg-red-600/30 text-red-400 text-xs font-bold rounded-full">
+                        {item.badge}
+                      </span>
+                    )}
+                    {active && <ChevronRight className="w-4 h-4" />}
                   </Link>
                 );
               })}
