@@ -26,7 +26,10 @@ export default function Analytics() {
 
   const fetchAnalyticsData = async () => {
     try {
-      const apiKey = process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY || '';
+      // Fetch API key from server-side config
+      const configRes = await fetch('/api/config');
+      const config = await configRes.json();
+      const apiKey = config.ETHERSCAN_API_KEY || '';
       
       // Fetch Ethereum network stats
       const gasResponse = await axios.get(
