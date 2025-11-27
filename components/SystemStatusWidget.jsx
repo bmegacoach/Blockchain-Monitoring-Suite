@@ -7,6 +7,7 @@ const SystemStatusWidget = ({ signer, isAdmin }) => {
   const { execute, loading: txLoading, error: txError, transactionHash } = useExecuteGuardianFunction();
   const [showConfirm, setShowConfirm] = useState(false);
   const [txStatus, setTxStatus] = useState('');
+  const [actionType, setActionType] = useState(null); // 'pause', 'emergency', or 'restore'
 
   const handleTogglePause = async () => {
     if (!isAdmin || !signer) {
@@ -26,6 +27,50 @@ const SystemStatusWidget = ({ signer, isAdmin }) => {
       }, 2000);
       
       setShowConfirm(false);
+    } catch (err) {
+      setTxStatus(`❌ Error: ${err.message}`);
+    }
+  };
+
+  const handleEmergencyGlobalPause = async () => {
+    if (!isAdmin || !signer) {
+      alert('Admin access required. Please connect the Guardian owner wallet.');
+      return;
+    }
+
+    try {
+      setTxStatus('');
+      await execute(signer, 'emergencyGlobalPause', 'UI Triggered Emergency');
+      setTxStatus('✅ Emergency global pause activated');
+      
+      setTimeout(() => {
+        refetch();
+      }, 2000);
+      
+      setShowConfirm(false);
+      setActionType(null);
+    } catch (err) {
+      setTxStatus(`❌ Error: ${err.message}`);
+    }
+  };
+
+  const handleRestoreOperations = async () => {
+    if (!isAdmin || !signer) {
+      alert('Admin access required. Please connect the Guardian owner wallet.');
+      return;
+    }
+
+    try {
+      setTxStatus('');
+      await execute(signer, 'restoreOperations');
+      setTxStatus('✅ Operations restored successfully');
+      
+      setTimeout(() => {
+        refetch();
+      }, 2000);
+      
+      setShowConfirm(false);
+      setActionType(null);
     } catch (err) {
       setTxStatus(`❌ Error: ${err.message}`);
     }
@@ -62,35 +107,72 @@ const SystemStatusWidget = ({ signer, isAdmin }) => {
       {isAdmin ? (
         <>
           {!showConfirm ? (
-            <button
-              onClick={() => setShowConfirm(true)}
-              disabled={txLoading || stateLoading}
-              className={`w-full py-3 px-4 rounded-lg font-bold flex items-center justify-center gap-2 transition-all duration-200 ${
-                isPaused
-                  ? 'bg-green-600 hover:bg-green-700 text-white disabled:bg-gray-600'
-                  : 'bg-red-600 hover:bg-red-700 text-white disabled:bg-gray-600'
-              } ${(txLoading || stateLoading) ? 'opacity-75 cursor-not-allowed' : ''}`}
-            >
-              <Power className="w-5 h-5" />
-              {txLoading ? 'Processing...' : isPaused ? 'RESUME PROTOCOL' : 'PAUSE PROTOCOL'}
-            </button>
+            <div className="space-y-3">
+              {/* Primary Button: Pause/Resume */}
+              <button
+                onClick={() => {
+                  setShowConfirm(true);
+                  setActionType('pause');
+                }}
+                disabled={txLoading || stateLoading}
+                className={`w-full py-3 px-4 rounded-lg font-bold flex items-center justify-center gap-2 transition-all duration-200 ${
+                  isPaused
+                    ? 'bg-green-600 hover:bg-green-700 text-white disabled:bg-gray-600'
+                    : 'bg-red-600 hover:bg-red-700 text-white disabled:bg-gray-600'
+                } ${(txLoading || stateLoading) ? 'opacity-75 cursor-not-allowed' : ''}`}
+              >
+                <Power className="w-5 h-5" />
+                {txLoading ? 'Processing...' : isPaused ? 'RESTORE OPERATIONS' : 'PAUSE PROTOCOL'}
+              </button>
+
+              {/* Emergency Button */}
+              {!isPaused && (
+                <button
+                  onClick={() => {
+                    setShowConfirm(true);
+                    setActionType('emergency');
+                  }}
+                  disabled={txLoading || stateLoading}
+                  className="w-full py-2 px-4 rounded-lg font-bold text-white bg-red-700 hover:bg-red-800 border-2 border-red-500 transition-all duration-200 disabled:opacity-50"
+                >
+                  🚨 EMERGENCY GLOBAL PAUSE
+                </button>
+              )}
+            </div>
           ) : (
-            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4">
-              <p className="text-red-400 font-semibold mb-4">
-                ⚠️ {isPaused ? 'Resume' : 'Pause'} minting protocol?
+            <div className={`rounded-lg p-4 mb-4 ${
+              actionType === 'emergency' 
+                ? 'bg-red-600/20 border-2 border-red-500'
+                : 'bg-red-500/10 border border-red-500/30'
+            }`}>
+              <p className={`font-semibold mb-4 ${actionType === 'emergency' ? 'text-red-300 text-lg' : 'text-red-400'}`}>
+                {actionType === 'emergency' 
+                  ? '⚠️ EMERGENCY PAUSE - This will freeze all minting globally!'
+                  : `⚠️ ${isPaused ? 'Resume' : 'Pause'} minting protocol?`}
               </p>
               <div className="flex gap-3">
                 <button
-                  onClick={() => setShowConfirm(false)}
+                  onClick={() => {
+                    setShowConfirm(false);
+                    setActionType(null);
+                  }}
                   className="flex-1 py-2 px-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={handleTogglePause}
+                  onClick={
+                    actionType === 'emergency' 
+                      ? handleEmergencyGlobalPause
+                      : actionType === 'restore'
+                      ? handleRestoreOperations
+                      : handleTogglePause
+                  }
                   disabled={txLoading}
                   className={`flex-1 py-2 px-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors ${
-                    isPaused
+                    actionType === 'emergency'
+                      ? 'bg-red-700 hover:bg-red-800 text-white'
+                      : isPaused
                       ? 'bg-green-600 hover:bg-green-700 text-white'
                       : 'bg-red-600 hover:bg-red-700 text-white'
                   } disabled:opacity-50`}

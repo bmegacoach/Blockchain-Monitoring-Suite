@@ -5,10 +5,28 @@
       "static/chunks/components_CollateralRatioManager_jsx.js"
     ]
   },
+  "admin.js -> ../components/ComplianceQueue": {
+    "id": "admin.js -> ../components/ComplianceQueue",
+    "files": [
+      "static/chunks/components_ComplianceQueue_jsx.js"
+    ]
+  },
   "admin.js -> ../components/MintingLimitControls": {
     "id": "admin.js -> ../components/MintingLimitControls",
     "files": [
       "static/chunks/components_MintingLimitControls_jsx.js"
+    ]
+  },
+  "admin.js -> ../components/PartnerManagement": {
+    "id": "admin.js -> ../components/PartnerManagement",
+    "files": [
+      "static/chunks/components_PartnerManagement_jsx.js"
+    ]
+  },
+  "admin.js -> ../components/RiskParameters": {
+    "id": "admin.js -> ../components/RiskParameters",
+    "files": [
+      "static/chunks/components_RiskParameters_jsx.js"
     ]
   },
   "admin.js -> ../components/SystemStatusWidget": {
