@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
-import { AlertCircle, Lock, Unlock, Shield, Wallet } from 'lucide-react';
+import { AlertCircle, Lock, Unlock, Shield, Wallet, Tabs } from 'lucide-react';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import { useGuardianOwner } from '../lib/useGuardian';
@@ -22,6 +22,21 @@ const MintingLimitControls = dynamic(() => import('../components/MintingLimitCon
   ssr: false
 });
 
+const ComplianceQueue = dynamic(() => import('../components/ComplianceQueue'), {
+  loading: () => <div className="bg-gray-800/50 rounded-xl p-6 h-40 animate-pulse" />,
+  ssr: false
+});
+
+const RiskParameters = dynamic(() => import('../components/RiskParameters'), {
+  loading: () => <div className="bg-gray-800/50 rounded-xl p-6 h-40 animate-pulse" />,
+  ssr: false
+});
+
+const PartnerManagement = dynamic(() => import('../components/PartnerManagement'), {
+  loading: () => <div className="bg-gray-800/50 rounded-xl p-6 h-40 animate-pulse" />,
+  ssr: false
+});
+
 export default function GuardianAdmin() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [connectedWallet, setConnectedWallet] = useState(null);
@@ -29,6 +44,7 @@ export default function GuardianAdmin() {
   const [loading, setLoading] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [hasMetaMask, setHasMetaMask] = useState(false);
+  const [activeTab, setActiveTab] = useState('system'); // 'system', 'compliance', 'settings'
   const { owner } = useGuardianOwner();
 
   // Check if we're on the client side and MetaMask is available
@@ -205,57 +221,147 @@ export default function GuardianAdmin() {
                 </div>
               )}
 
-              {/* Admin Controls Grid (owner-only) */}
+              {/* Admin Controls Grid (owner-only) - Tabbed Interface */}
               {isAdmin ? (
                 <div className="space-y-8">
-                  {/* Row 1: System Status */}
-                  <SystemStatusWidget 
-                    signer={typeof window !== 'undefined' && connectedWallet ? window.ethereum : null} 
-                    isAdmin={isAdmin}
-                  />
-
-                  {/* Row 2: Collateral & Minting Controls */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <CollateralRatioManager 
-                      signer={typeof window !== 'undefined' && connectedWallet ? window.ethereum : null} 
-                      isAdmin={isAdmin}
-                    />
-                    <MintingLimitControls 
-                      signer={typeof window !== 'undefined' && connectedWallet ? window.ethereum : null} 
-                      isAdmin={isAdmin}
-                    />
+                  {/* Tab Navigation */}
+                  <div className="flex gap-2 border-b border-gray-700 overflow-x-auto">
+                    <button
+                      onClick={() => setActiveTab('system')}
+                      className={`px-6 py-3 font-semibold whitespace-nowrap border-b-2 transition-colors ${
+                        activeTab === 'system'
+                          ? 'text-blue-400 border-blue-400'
+                          : 'text-gray-400 border-transparent hover:text-gray-300'
+                      }`}
+                    >
+                      🚨 System Status
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('compliance')}
+                      className={`px-6 py-3 font-semibold whitespace-nowrap border-b-2 transition-colors ${
+                        activeTab === 'compliance'
+                          ? 'text-yellow-400 border-yellow-400'
+                          : 'text-gray-400 border-transparent hover:text-gray-300'
+                      }`}
+                    >
+                      📋 Pending Approvals
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('settings')}
+                      className={`px-6 py-3 font-semibold whitespace-nowrap border-b-2 transition-colors ${
+                        activeTab === 'settings'
+                          ? 'text-purple-400 border-purple-400'
+                          : 'text-gray-400 border-transparent hover:text-gray-300'
+                      }`}
+                    >
+                      ⚙️ Settings
+                    </button>
                   </div>
 
-                  {/* Info Section */}
-                  <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 border border-blue-500/20 rounded-xl p-6">
-                    <h3 className="text-lg font-semibold text-gray-100 mb-4">About Guardian Controls</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                      <div>
-                        <h4 className="text-blue-400 font-semibold mb-2">🚨 System Status (Emergency Pause)</h4>
-                        <p className="text-gray-300">
-                          Immediately pause minting across the entire protocol. Use this if a peg break is detected or an exploit is found. Only the Guardian owner can execute this.
-                        </p>
+                  {/* Tab Content */}
+                  {activeTab === 'system' && (
+                    <div className="space-y-8">
+                      {/* System Status */}
+                      <SystemStatusWidget 
+                        signer={typeof window !== 'undefined' && connectedWallet ? window.ethereum : null} 
+                        isAdmin={isAdmin}
+                      />
+
+                      {/* Collateral & Minting Controls */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <CollateralRatioManager 
+                          signer={typeof window !== 'undefined' && connectedWallet ? window.ethereum : null} 
+                          isAdmin={isAdmin}
+                        />
+                        <MintingLimitControls 
+                          signer={typeof window !== 'undefined' && connectedWallet ? window.ethereum : null} 
+                          isAdmin={isAdmin}
+                        />
                       </div>
-                      <div>
-                        <h4 className="text-purple-400 font-semibold mb-2">📊 Collateral Risk Parameters</h4>
-                        <p className="text-gray-300">
-                          Adjust collateral ratios for each supported asset. If Gold or ETH crashes, increase requirements instantly to protect the protocol solvency.
-                        </p>
-                      </div>
-                      <div>
-                        <h4 className="text-green-400 font-semibold mb-2">⚡ Velocity Limit (Circuit Breaker)</h4>
-                        <p className="text-gray-300">
-                          Set maximum USDGB that can be minted per hour. Prevents whale attacks or sudden spikes in minting that could destabilize the peg.
-                        </p>
-                      </div>
-                      <div>
-                        <h4 className="text-yellow-400 font-semibold mb-2">🎯 Asset Management</h4>
-                        <p className="text-gray-300">
-                          Add new whitelisted collateral tokens (USDC, WBTC, etc.) without deploying a new contract. Expand your market on-the-fly.
-                        </p>
+
+                      {/* Info Section */}
+                      <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 border border-blue-500/20 rounded-xl p-6">
+                        <h3 className="text-lg font-semibold text-gray-100 mb-4">About System Controls</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                          <div>
+                            <h4 className="text-blue-400 font-semibold mb-2">🚨 Emergency Pause</h4>
+                            <p className="text-gray-300">
+                              Freeze all minting protocol instantly. Use for peg breaks or exploits.
+                            </p>
+                          </div>
+                          <div>
+                            <h4 className="text-purple-400 font-semibold mb-2">📊 Collateral Ratios</h4>
+                            <p className="text-gray-300">
+                              Adjust asset collateral requirements to protect protocol solvency.
+                            </p>
+                          </div>
+                          <div>
+                            <h4 className="text-green-400 font-semibold mb-2">⚡ Minting Limits</h4>
+                            <p className="text-gray-300">
+                              Set maximum USDGB mint per transaction or time period.
+                            </p>
+                          </div>
+                          <div>
+                            <h4 className="text-yellow-400 font-semibold mb-2">🎯 Asset Management</h4>
+                            <p className="text-gray-300">
+                              Add new whitelisted collateral tokens dynamically.
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
+
+                  {activeTab === 'compliance' && (
+                    <div className="space-y-8">
+                      <ComplianceQueue 
+                        signer={typeof window !== 'undefined' && connectedWallet ? window.ethereum : null} 
+                        isAdmin={isAdmin}
+                      />
+                      
+                      {/* Info Section */}
+                      <div className="bg-gradient-to-br from-yellow-900/20 to-orange-900/20 border border-yellow-500/20 rounded-xl p-6">
+                        <h3 className="text-lg font-semibold text-gray-100 mb-4">Traffic Light System</h3>
+                        <div className="space-y-3 text-sm">
+                          <div className="flex items-start gap-3">
+                            <div className="w-3 h-3 rounded-full bg-green-500 mt-1"></div>
+                            <div>
+                              <p className="text-green-400 font-semibold">Green Lane</p>
+                              <p className="text-gray-300">Under $10k - Automatically approved</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-3">
+                            <div className="w-3 h-3 rounded-full bg-yellow-500 mt-1 animate-pulse"></div>
+                            <div>
+                              <p className="text-yellow-400 font-semibold">Yellow Lane</p>
+                              <p className="text-gray-300">$10k - $1M - Requires compliance approval</p>
+                            </div>
+                          </div>
+                          <div className="flex items-start gap-3">
+                            <div className="w-3 h-3 rounded-full bg-red-500 mt-1"></div>
+                            <div>
+                              <p className="text-red-400 font-semibold">Red Lane</p>
+                              <p className="text-gray-300">Over $1M - Automatically rejected</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === 'settings' && (
+                    <div className="space-y-8">
+                      <RiskParameters 
+                        signer={typeof window !== 'undefined' && connectedWallet ? window.ethereum : null} 
+                        isAdmin={isAdmin}
+                      />
+                      
+                      <PartnerManagement 
+                        signer={typeof window !== 'undefined' && connectedWallet ? window.ethereum : null} 
+                        isAdmin={isAdmin}
+                      />
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="rounded-xl p-8 bg-gradient-to-br from-gray-800/60 to-gray-900/60 border border-red-600/20 text-center">
